@@ -44,6 +44,16 @@ def file2matrix(filename):
 		classLabelVector.append(classLabels[listFromLine[-1]])
 		index += 1
 	return returnMat, classLabelVector
+	
+def autoNorm(dataSet):
+	minVals = dataSet.min(0)
+	maxVals = dataSet.max(0)
+	ranges = maxVals - minVals
+	normDataSet = zeros(dataSet.shape)
+	m = dataSet.shape[0]
+	normDataSet = dataSet - tile(minVals, (m, 1))
+	normDataSet = normDataSet / tile(ranges, (m, 1))
+	return normDataSet, ranges, minVals
 
 def showMatrix(matrix):
 	fig = plt.figure()
@@ -53,9 +63,24 @@ def showMatrix(matrix):
 	)
 	plt.show()
 
+def classfiyPerson():
+	resultList = ['not at all', 'in small doses', 'in large doses']
+	percentTats = float(raw_input("percentage of time spent playing video games?"))
+	ffMiles = float(raw_input("frequent filer meils earned per year?"))
+	iceCream = float(raw_input('liters of ice cream consumed per year?'))
+	datingDataMat, datingLabels = file2matrix('datingTestSet2.txt')
+	normMat, ranges, minVals = autoNorm(datingDataMat)
+	inArr = array([ffMiles, percentTats, iceCream])
+	classifierResult = classify0(
+		(inArr-minVals)/ranges, normMat, datingLabels, 3
+	)
+	print 'You will probably like this person: ', resultList[classifierResult-1]
+
 if __name__ == "__main__":
-	group, labels = createDataSet()
-	print classify0([0., 0.], group, labels, 3)
-	datingDataMat, datingLabels = file2matrix('datingTestSet.txt')
+	#group, labels = createDataSet()
+	#print classify0([0., 0.], group, labels, 3)
+	#datingDataMat, datingLabels = file2matrix('datingTestSet.txt')
 	# print datingDataMat[:,1]
-	showMatrix(datingDataMat)
+	#showMatrix(datingDataMat)
+	classfiyPerson()
+	

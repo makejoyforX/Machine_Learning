@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from numpy import *
+from os import listdir
 import collections
 import operator
 import sys
@@ -19,7 +20,7 @@ def calManhattanDist(inVector, dataSet):
 	return absDist
 
 def calCosineMeasureDist(inVector, dataSet):
-	sqDist = apply_along_axis(calCosineMeasure, 1, dataSet, inVector)
+	sqDist = apply_along_axis(calCosineMeasure, len(dataSet.shape)-1, dataSet, inVector)
 	return sqDist
 
 def calCosineMeasure(x, y):
@@ -84,13 +85,54 @@ def kNNTest(dataMat, dataLabel, k, distFunc):
 		if classifierResult!=dataLabel[i]: nError += 1
 		print "the classifier's result: %d, real result: %d"\
 					% (classifierResult, dataLabel[i])
-	print 'the total error rate is: %f' % (float(nError)/float(nTestVec))
+	print '\nthe total number of errors: %d' % (nError)
+	print '\nthe total error rate is: %f' % (float(nError)/float(nTestVec))
 
+def img2vector(filename):
+	returnVect = zeros((1, 1024))
+	fr = open(filename, 'r')
+	for i in range(32):
+		lineStr = fr.readline()
+		for j in range(32):
+			returnVect[0, 32*i+j] = int(lineStr[j])
+	fr.close()
+	return returnVect
+
+def handwritingClassTest(k, distFunc):
+	hwLabels = []
+	train_fpath = './digits/trainingDigits'
+	trainingFileList = listdir(train_fpath)
+	m = len(trainingFileList)
+	trainingMat = zeros((m, 1024))
+	for i in range(m):
+		fileNameStr = trainingFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = int(fileStr.split('_')[0])
+		hwLabels.append(classNumStr)
+		trainingMat[i, :] = img2vector('%s/%s' % (train_fpath, fileNameStr))
+
+	test_fpath = './digits/testDigits'
+	testFileList = listdir(test_fpath)
+	errorCount = 0.0
+	mTest = len(testFileList)
+	for i in range(mTest):
+		fileNameStr = testFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = int(fileStr.split('_')[0])
+		vectorUnderTest = img2vector('%s/%s' % (test_fpath, fileNameStr))
+		classifierResult = classifyOneVec(
+			vectorUnderTest[0], trainingMat, hwLabels, k, distFunc
+		)
+		print 'the classifierResult came back with: %d, the real answer is: %d'\
+						% (classifierResult, classNumStr)
+		if classifierResult!=classNumStr: errorCount += 1.0
+	print '\nthe total number of errors: %d' % (errorCount)
+	print '\nthe total error rate is: %f' % (errorCount/float(mTest))
 
 distFuncDist = {
-	'Euclidean': calEuclideanDist,
-	'ManhattanDist': calManhattanDist,
-	'CosineMeasure': calCosineMeasureDist,
+	 'Euclidean': calEuclideanDist,
+	 'ManhattanDist': calManhattanDist,
+	 'CosineMeasure': calCosineMeasureDist,
 }
 
 if __name__ == '__main__':
@@ -98,7 +140,23 @@ if __name__ == '__main__':
 	if len(sys.argv) > 1:
 		fname = sys.argv[1]
 	dataMat, dataLabel = file2matrix(fname)
+	saveStdOut = sys.stdout
 	k = 3
 	for distFuncName, distFunc in distFuncDist.iteritems():
 		print '\nuse %s...' % (distFuncName)
+		fname = distFuncName + '_result.log'
+		fout = open(fname, 'w')
+		sys.stdout = fout
 		kNNTest(dataMat, dataLabel, k, distFunc)
+		fout.close()
+		sys.stdout = saveStdOut
+	# saveStdOut = sys.stdout
+	# k = 4
+	# for distFuncName, distFunc in distFuncDist.iteritems():
+	# 	print '\nuse %s...' % (distFuncName)
+	# 	fname = distFuncName + '_result.log'
+	# 	fout = open(fname, 'w')
+	# 	sys.stdout = fout
+	# 	handwritingClassTest(k, distFunc)
+	# 	fout.close()
+	# 	sys.stdout = saveStdOut

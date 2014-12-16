@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from numpy import *
+from os import listdir
 import operator
 import matplotlib
 import matplotlib.pyplot as plt
@@ -76,11 +77,51 @@ def classfiyPerson():
 	)
 	print 'You will probably like this person: ', resultList[classifierResult-1]
 
+def img2vector(filename):
+	returnVect = zeros((1, 1024))
+	fr = open(filename)
+	for i in range(32):
+		lineStr = fr.readline()
+		for j in range(32):
+			returnVect[0, 32*i+j] = int(lineStr[j])
+	return returnVect
+
+def handwritingClassTest():
+	hwLabels = []
+	train_fpath = './digits/trainingDigits'
+	trainingFileList = listdir(train_fpath)
+	m = len(trainingFileList)
+	trainingMat = zeros((m, 1024))
+	for i in range(m):
+		fileNameStr = trainingFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = int(fileStr.split('_')[0])
+		hwLabels.append(classNumStr)
+		trainingMat[i, :] = img2vector('%s/%s' % (train_fpath, fileNameStr))
+
+	test_fpath = './digits/testDigits'
+	testFileList = listdir(test_fpath)
+	errorCount = 0.0
+	mTest = len(testFileList)
+	for i in range(mTest):
+		fileNameStr = testFileList[i]
+		fileStr = fileNameStr.split('.')[0]
+		classNumStr = int(fileStr.split('_')[0])
+		vectorUnderTest = img2vector('%s/%s' % (test_fpath, fileNameStr))
+		classifierResult = classify0(
+			vectorUnderTest, trainingMat, hwLabels, 3
+		)
+		print 'the classifierResult came back with: %d, the real answer is: %d'\
+						% (classifierResult, classNumStr)
+		if classifierResult!=classNumStr: errorCount += 1.0
+	print '\nthe total number of errors: %d' % (errorCount)
+	print '\nthe total error rate is: %f' % (errorCount/float(mTest))
+
 if __name__ == "__main__":
 	#group, labels = createDataSet()
 	#print classify0([0., 0.], group, labels, 3)
 	#datingDataMat, datingLabels = file2matrix('datingTestSet.txt')
 	# print datingDataMat[:,1]
 	#showMatrix(datingDataMat)
-	classfiyPerson()
-	
+	#classfiyPerson()
+	handwritingClassTest()

@@ -71,7 +71,7 @@ def adaBoostTrainDS(dataArr, classLabels, numIt=40):
 		# print 'total error: ', errorRate, '\n'
 		if errorRate == 0.0:
 			break
-	return weakClassArr
+	return weakClassArr, aggClassEst
 
 def adaClassify(dataToClass, classifierArr)	:
 	dataMatrix = mat(dataToClass)
@@ -100,6 +100,35 @@ def loadDataSet(fileName):
 	fr.close()
 	return dataMat, labelMat
 	
+def plotROC(predStrengths, classLabels):
+	import matplotlib.pyplot as plt
+	cur = (1., 1.)
+	ySum = 0.0
+	numPosClas = sum(array(classLabels)==1.0)
+	yStep = 1. / numPosClas
+	xStep = 1. / (len(classLabels) - numPosClas)
+	sortedIndices = predStrengths.argsort()
+	fig = plt.figure()
+	fig.clf()
+	ax = plt.subplot(111)
+	for index in sortedIndices.tolist()[0]:
+		if classLabels[index]==1.0:
+			delX = 0.
+			delY = yStep
+		else:
+			delX = xStep
+			delY = 0.
+			ySum += cur[1]
+		ax.plot([cur[0], cur[0]-delX], [cur[1], cur[1]-delY], c='b')
+		cur = (cur[0]-delX, cur[1]-delY)
+	ax.plot([0, 1], [0, 1], 'b--')
+	plt.xlabel('False Positive Rate')
+	plt.ylabel('True Positive Rate')
+	plt.title('ROC curve for AdaBoost Horse Colic Detection System')
+	ax.axis([0, 1, 0, 1])
+	plt.show()
+	print 'the Area under the Curve is: ', ySum*xStep
+	
 if __name__ == '__main__':
 	# dataMat, classLabels = loadSimpleData()
 	# m, n = shape(dataMat)
@@ -110,12 +139,12 @@ if __name__ == '__main__':
 	# print adaClassify([0., 0.], classifierArr)
 	# print adaClassify([[5., 5.], [0., 0.]], classifierArr)
 	dataArr, labelArr = loadDataSet('horseColicTraining2.txt')
-	classifierArr = adaBoostTrainDS(dataArr, labelArr, 10)
-	testArr, testLabelArr = loadDataSet('horseColicTest2.txt')
-	prediction10 = adaClassify(testArr, classifierArr)
-	m, n = shape(testArr)
-	errArr = mat(ones((m, 1)))
-	errCount = errArr[prediction10!=mat(testLabelArr).T].sum()
-	print 'error Rate is %.3f' % (errCount*1.0/m)
-	
+	classifierArr, aggClassEst = adaBoostTrainDS(dataArr, labelArr, 10)
+	# testArr, testLabelArr = loadDataSet('horseColicTest2.txt')
+	# prediction10 = adaClassify(testArr, classifierArr)
+	# m, n = shape(testArr)
+	# errArr = mat(ones((m, 1)))
+	# errCount = errArr[prediction10!=mat(testLabelArr).T].sum()
+	# print 'error Rate is %.3f' % (errCount*1.0/m)
+	plotROC(aggClassEst.T, labelArr)
 	

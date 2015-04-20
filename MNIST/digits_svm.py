@@ -30,9 +30,9 @@ def initLog():
 				
 def testSVM(trainDigits, testDigits):
 	clf = svm.SVC(C=1.0, cache_size=200, gamma=0.001)
-	clf.fit(trainDigits.data, trainDigits.target)
+	clf.fit(trainDigits.data[:10000], trainDigits.target[:10000])
 	logging.debug('finish logistic fit')
-	logging.debug('svm accuracy is %.3f' % clf.score(testDigits.data, testDigits.target))
+	logging.debug('svm accuracy is %.3f' % clf.score(testDigits.data[:500], testDigits.target[:500]))
 	# predicted = clf.predict(testDigits.data)
 	# logging.debug('svm accuracy is %.3f' % clf.score(trainDigits.data[:100], trainDigits.target[:100]))
 	# predicted = clf.predict(trainDigits.data[:100])
@@ -58,11 +58,11 @@ def testSVM(trainDigits, testDigits):
 def usingPCA(trainDigits, testDigits):
 	clf = svm.SVC(C=1.0, cache_size=200, gamma=0.001)
 	pca = PCA(n_components=15*15).fit(trainDigits.data)
-	train_Trans = pca.transform(trainDigits.data)
-	clf.fit(train_Trans, trainDigits.target)
-	test_Trans = pca.transform(testDigits.data)
+	train_Trans = pca.transform(trainDigits.data[:10000])
+	clf.fit(train_Trans, trainDigits.target[:10000])
+	test_Trans = pca.transform(testDigits.data[:500])
 	logging.debug('finish logistic fit')
-	logging.debug('svm(after PCA) accuracy is %.3f' % clf.score(test_Trans, testDigits.target[:100]))
+	logging.debug('svm(after PCA) accuracy is %.3f' % clf.score(test_Trans[:500], testDigits.target[:500]))
 	
 	
 if __name__ == '__main__':

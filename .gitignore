@@ -9,7 +9,7 @@ Desktop.ini
 *.so
 *.egg
 *.egg-info
-log*
+*.log
 dist
 build
 *otto_*.csv

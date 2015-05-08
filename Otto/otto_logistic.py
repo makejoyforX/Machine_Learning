@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import time
 import pickle
 import logging
@@ -15,23 +16,25 @@ from sklearn.cross_validation import KFold
 from otto_loadData import load_otto
 from otto_thread import otto_thread
 
-def initLog():
+def initLog(lda):
 	# os.chdir(parentDirPath)
+	slbda = str(lda)+'0000'
+	slbda = slbda[:4].replace('.', '')
 	logging.basicConfig(
 				level=logging.DEBUG,
                 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
                 datefmt='%a, %d %b %Y %H:%M:%S',
-                filename=__file__[:-2]+'log',
+                filename=__file__[:-3]+'_'+slbda+'.log',
                 filemode='w')
 
 
-def testLogistic(otto, lbda=1.0):
-	X = otto.data[:100, :10]
-	y = otto.target[:100]
-	# X = otto.data
-	# y = otto.target
-	n_components = 5
-	kbest = 1
+def testLogistic(otto, lbda=1.0, n_components=20, kbest=4):
+	# X = otto.data[:1000, :20]
+	# y = otto.target[:1000]
+	X = otto.data[:, :]
+	y = otto.target[:]
+	# n_components = 20
+	# kbest = 4
 #	print 'y.shape =', y.shape
 
 	scalar = StandardScaler().fit(X)
@@ -45,7 +48,7 @@ def testLogistic(otto, lbda=1.0):
 	)
 	X_features = combined_features.fit(X,y).transform(X)
 
-	logistic = LogisticRegression(C=1/ldba)
+	logistic = LogisticRegression(C=1.0/lbda)
 	pipes = [
 		Pipeline(steps=[('features', combined_features), ('logistic', logistic)])\
 		for i in range(5)
@@ -75,15 +78,24 @@ def testLogistic(otto, lbda=1.0):
 if __name__ == '__main__':
 	print 'begin...'
 	print os.curdir
-	initLog()
-	otto = load_otto()
+
 	# print otto.target[:10]
-	lbdaList = [0.03, 0.1, 0.3, 1.0, 1.5]
-	for lbda in lbdaList:
-		logging.debug('working on logisitc, lambda=%f' % lbda)
-		start_clock = time.clock()
-		testLogistic(otto, lbda)
-		end_clock = time.clock()
-		logging.debug(str(end_clock - start_clock))
+	lbdaList = [0.03, 0.1, 0.3, 1.0, 1.5, 2.0]
+	# for lbda in lbdaList[-1]:
+	if len(sys.argv)>1:
+		lbda = float(sys.argv[1])
+	else:
+		lbda = 0.1
+	if len(sys.argv)>2:
+		n_components = int(sys.argv[2])
+	else:
+		n_components = 40
+	initLog(lbda)
+	otto = load_otto()
+	logging.debug('working on logisitc, lambda=%f' % lbda)
+	start_clock = time.clock()
+	testLogistic(otto, lbda, n_components=40)
+	end_clock = time.clock()
+	logging.debug(str(end_clock - start_clock))
 	
 

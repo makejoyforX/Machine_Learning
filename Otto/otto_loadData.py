@@ -17,17 +17,36 @@ def load_rawData(fname=rawTrainFileName, fpath=parentDirPath):
 	with open(os.path.join(fpath, fname), 'r') as fin:
 		lines = fin.readlines()[1:]
 		desFileName = fname[3:]
+		# labelSet = set()
+		# for line in lines[-1:]:
+		# 		line = line.strip()
+		# 		intervals = line.split(',')[1:]
+		# 		label = intervals[-1].split('_')[-1]
+		# 		labelSet.add(int(label))
+		# 		intervals[-1] = label
 		with open(os.path.join(fpath, desFileName), 'w') as fout:
 			for line in lines:
 				line = line.strip()
-				intervals = line.split(',')[1:-1]
+				intervals = line.split(',')[1:]
 				label = intervals[-1].split('_')[-1]
-				intervals.append(label)
-				# intervals = map(float, intervals)
-				# ss = ','.join(map(str, intervals))
-				# print ss
-				fout.write(','.join(intervals)+'\n')
+				labelSet.add(int(label))
+				intervals[-1] = label
+				intervals = map(float, intervals)
+				ssq = ','.join(map(str, intervals))+'\n'
+				fout.write(ssq)
+		# print 'labelSet =\n', labelSet
 
+
+def load_testotto(fname=testFileName, fpath=parentDirPath):
+	data = np.loadtxt(os.path.join(fpath, fname), delimiter=',', dtype=float)
+	flat_data = data[:,:]
+	images = flat_data.view()
+	return base.Bunch(
+		data=flat_data,
+		target=None,
+		target_names=np.arange(1,10),
+		images=images,
+	)
 
 def load_otto(fname=trainFileName, fpath=parentDirPath):
 
@@ -49,6 +68,8 @@ def load_otto(fname=trainFileName, fpath=parentDirPath):
 
 
 if __name__ == '__main__':
-	# load_otto()
+	# load_rawData()
 	load_rawData(fname=rawTestFileName)
-	load_otto()
+	# otto = load_otto()
+	# otto = load_testotto()
+	# print otto.data.shape

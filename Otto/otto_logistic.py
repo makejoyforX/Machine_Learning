@@ -25,26 +25,27 @@ def initLog():
                 filemode='w')
 
 
-def testLogistic(otto):
-#	X = otto.data[:20000, :20]
-#	y = otto.target[:20000]
-	X = otto.data
-	y = otto.target
-
+def testLogistic(otto, lbda=1.0):
+	X = otto.data[:100, :10]
+	y = otto.target[:100]
+	# X = otto.data
+	# y = otto.target
+	n_components = 5
+	kbest = 1
 #	print 'y.shape =', y.shape
 
 	scalar = StandardScaler().fit(X)
 	X = scalar.transform(X)
 
-	pca = PCA(n_components=20)
-	selection = SelectKBest(k=4)
+	pca = PCA(n_components=n_components)
+	selection = SelectKBest(k=kbest)
 
 	combined_features = FeatureUnion(
 		[("pca", pca), ('univ_select', selection)]
 	)
 	X_features = combined_features.fit(X,y).transform(X)
 
-	logistic = LogisticRegression()
+	logistic = LogisticRegression(C=1/ldba)
 	pipes = [
 		Pipeline(steps=[('features', combined_features), ('logistic', logistic)])\
 		for i in range(5)
@@ -77,9 +78,12 @@ if __name__ == '__main__':
 	initLog()
 	otto = load_otto()
 	# print otto.target[:10]
-	logging.debug('working on logisitc')
-	start_clock = time.clock()
-	testLogistic(otto)
-	end_clock = time.clock()
-	logging.debug(str(end_clock - start_clock))
+	lbdaList = [0.03, 0.1, 0.3, 1.0, 1.5]
+	for lbda in lbdaList:
+		logging.debug('working on logisitc, lambda=%f' % lbda)
+		start_clock = time.clock()
+		testLogistic(otto, lbda)
+		end_clock = time.clock()
+		logging.debug(str(end_clock - start_clock))
+	
 

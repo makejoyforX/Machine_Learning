@@ -21,7 +21,7 @@ class otto_thread(threading.Thread):
 			clf = self.args[0]
 			logging.debug('threadName = %s, begin...' % (self.name))
 			clf.fit(*self.kwargs['train'])
-			logging.debug('%s: score is %.3f' % (self.name, clf.score(*self.kwargs['test'])))
+			logging.debug('%s: [%s] score is %.3f' % (self.name, self.kwargs['algo'], clf.score(*self.kwargs['test'])))
 			# logging.debug('%s: bias is %.3f' % (self.name, clf.intercept_))
 			logging.debug('threadName = %s, end...' % (self.name))
 		return

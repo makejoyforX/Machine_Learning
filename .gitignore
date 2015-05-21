@@ -3,6 +3,13 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 *.log
+log
+
+# Visual studio:
+vc*.
+Ghoul.*
+*.obj
+*.*log
 
 # Python:
 *.py[cod]

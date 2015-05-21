@@ -6,10 +6,11 @@ Desktop.ini
 log
 
 # Visual studio:
-vc*.
+vc*.*
 Ghoul.*
 *.obj
 *.*log
+*.props
 
 # Python:
 *.py[cod]

@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+
 import sys
 import logging
 import os
 import threading
 import datetime
 import time
+import gc
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,7 +37,6 @@ class clf_thread(threading.Thread):
 			y_pred = clf.predict(X_test)
 			error_rate = 1 - accuracy_score(y_test, y_pred)
 			logging.debug('%s: [%s] error rate is %.6f' % (self.name, self.kwargs['algo'], error_rate))
-			# logging.debug('%s: bias is %.3f' % (self.name, clf.intercept_))
 			logging.debug('threadName = %s, end...' % (self.name))
 		return
 
@@ -57,6 +59,7 @@ def predict_adaBoost(X, y, algorithm):
 	dt_clf = DecisionTreeClassifier(max_depth=max_depth)
 	algorithm = algorithm
 	n_folds = 5
+	learning_rate = 0.1
 
 	cv = KFold(n=X.shape[0], n_folds=n_folds, shuffle=True)
 	
@@ -66,6 +69,7 @@ def predict_adaBoost(X, y, algorithm):
 		clf = AdaBoostClassifier(
 			base_estimator=dt_clf,
 			n_estimators=n_estimators,
+			learning_rate=learning_rate,
 			algorithm=algorithm,
 		)
 		trainData = X[trainIdx]
@@ -115,8 +119,8 @@ def predict_GDMCBoost(X, y):
 		# clf.fit(trainData, trainTarget)
 		# predTarget = clf.predict(testData)
 		# error_rate = 1 - accuracy_score(testTarget, predTarget)
-		# logging.debug('%s: [%s] 0/1 loss is %.6f' % (str(i+1), "GDMCBoost", error_rate))
-		
+		# logging.debug('%s: [%s] error rate is %.6f' % (str(i+1), "GDMCBoost", error_rate))
+
 	for t in threadList:
 		t.join()
 
@@ -126,8 +130,9 @@ def predict_xgBoost(X, y):
 	n_estimators = 100
 	learning_rate = 1.0
 	silent = True
-	nthread = 4
-	
+	nthread = 2
+	n_folds = 5
+
 	cv = KFold(n=X.shape[0], n_folds=n_folds, shuffle=True)
 	
 	for i, (trainIdx, testIdx) in enumerate(cv):
@@ -142,7 +147,7 @@ def predict_xgBoost(X, y):
 		clf.fit(trainData, trainTarget)
 		predTarget = clf.predict(testData)
 		error_rate = 1 - accuracy_score(testTarget, predTarget)
-		logging.debug('%s: [%s] 0/1 loss is %.6f' % (str(i+1), "GDMCBoost", error_rate))
+		logging.debug('%s: [%s] error rate is %.6f' % (str(i+1), "GDMCBoost", error_rate))
 		
 		
 def load_data(fname, dtype):
@@ -154,21 +159,26 @@ def load_data(fname, dtype):
 	
 def begin_test():
 	init_Logging()
-	d_fpath = "f:\ML\DMCBoost\ddata"
+	d_fpath = "./ddata"
 	ddata = [
-		"wine.data"
+		"wine.data",
+		"car.data",
+		"CNAE-9.data",
+		"nursery.data",
+		"agaricus.data",
+		"letter.data",
 	]
 	for fname in ddata:
 		X, y = load_data(os.path.join(d_fpath, fname), np.int32)
 		logging.debug("[%s] (%d x %d) begin AdaBoost ..." % (fname, X.shape[0], X.shape[1]))
 		startc_clock = time.clock()
-		# predict_samme(X, y)
+		predict_samme(X, y)
 		end_clock = time.clock()
 		logging.debug("[%s] (%6fs) end AdaBoost ..." % (fname, end_clock-startc_clock))
 		
 		logging.debug("[%s] (%d x %d) begin GDMCBoost ..." % (fname, X.shape[0], X.shape[1]))
 		startc_clock = time.clock()
-		# predict_GDMCBoost(X, y)
+		predict_GDMCBoost(X, y)
 		end_clock = time.clock()
 		logging.debug("[%s] (%6fs) end GDMCBoost ..." % (fname, end_clock-startc_clock))
 		
@@ -177,6 +187,11 @@ def begin_test():
 		predict_xgBoost(X, y)
 		end_clock = time.clock()
 		logging.debug("[%s] (%6fs) end xgBoost ..." % (fname, end_clock-startc_clock))
+		
+		logging.debug("\n")
+		# collect garbage
+		gc.collect()
+
 		
 if __name__ == "__main__":
 	begin_test()

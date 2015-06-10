@@ -54,7 +54,7 @@ def init_Logging():
 
 
 def predict_adaBoost(X, y, algorithm):
-	max_depth = 1
+	max_depth = 3
 	n_estimators = 100
 	dt_clf = DecisionTreeClassifier(max_depth=max_depth)
 	algorithm = algorithm
@@ -91,21 +91,24 @@ def predict_samme(X, y):
 	predict_adaBoost(X, y, "SAMME")
 	
 	
-def predict_samme(X, y):
+def predict_samme_r(X, y):
 	predict_adaBoost(X, y, "SAMME.R")
 
 	
 def predict_GDMCBoost(X, y):
-	max_depth = 1
+	max_depth = 3
 	n_estimators = 100
 	n_folds = 5
+	learning_rate=0.1
 
 	cv = KFold(n=X.shape[0], n_folds=n_folds, shuffle=True)
 	
 	threadList = []
 	
 	for i, (trainIdx, testIdx) in enumerate(cv):
-		clf = GradientBoostingClassifier(n_estimators=n_estimators, max_depth=max_depth, )
+		clf = GradientBoostingClassifier(
+			n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate
+		)
 		trainData = X[trainIdx]
 		trainTarget = y[trainIdx]
 		testData = X[testIdx]
@@ -128,7 +131,7 @@ def predict_GDMCBoost(X, y):
 def predict_xgBoost(X, y):
 	max_depth = 3
 	n_estimators = 100
-	learning_rate = 1.0
+	learning_rate = 0.1
 	silent = True
 	nthread = 2
 	n_folds = 5
@@ -147,7 +150,7 @@ def predict_xgBoost(X, y):
 		clf.fit(trainData, trainTarget)
 		predTarget = clf.predict(testData)
 		error_rate = 1 - accuracy_score(testTarget, predTarget)
-		logging.debug('%s: [%s] error rate is %.6f' % (str(i+1), "GDMCBoost", error_rate))
+		logging.debug('%s: [%s] error rate is %.6f' % (str(i+1), "xgBoost", error_rate))
 		
 		
 def load_data(fname, dtype):
@@ -167,26 +170,27 @@ def begin_test():
 		"nursery.data",
 		"agaricus.data",
 		"letter.data",
+#		"poker.data",
 	]
 	for fname in ddata:
 		X, y = load_data(os.path.join(d_fpath, fname), np.int32)
 		logging.debug("[%s] (%d x %d) begin AdaBoost ..." % (fname, X.shape[0], X.shape[1]))
-		startc_clock = time.clock()
+		start_clock = time.clock()
 		predict_samme(X, y)
 		end_clock = time.clock()
-		logging.debug("[%s] (%6fs) end AdaBoost ..." % (fname, end_clock-startc_clock))
+		logging.debug("[%s] (%.2fs) end AdaBoost ..." % (fname, end_clock-start_clock))
 		
 		logging.debug("[%s] (%d x %d) begin GDMCBoost ..." % (fname, X.shape[0], X.shape[1]))
-		startc_clock = time.clock()
+		start_clock = time.clock()
 		predict_GDMCBoost(X, y)
 		end_clock = time.clock()
-		logging.debug("[%s] (%6fs) end GDMCBoost ..." % (fname, end_clock-startc_clock))
+		logging.debug("[%s] (%.2fs) end GDMCBoost ..." % (fname, end_clock-start_clock))
 		
 		logging.debug("[%s] (%d x %d) begin xgBoost ..." % (fname, X.shape[0], X.shape[1]))
-		startc_clock = time.clock()
+		start_clock = time.clock()
 		predict_xgBoost(X, y)
 		end_clock = time.clock()
-		logging.debug("[%s] (%6fs) end xgBoost ..." % (fname, end_clock-startc_clock))
+		logging.debug("[%s] (%.2fs) end xgBoost ..." % (fname, end_clock-start_clock))
 		
 		logging.debug("\n")
 		# collect garbage

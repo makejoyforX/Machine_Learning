@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.datasets import make_classification, load_iris
 from sklearn.metrics import accuracy_score, zero_one_loss
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
 from tree import tree
 
 
@@ -115,7 +117,7 @@ class DMCBoost(object):
 					continue
 			e_dict[q] += error_update
 		if len(e_dict) == 0:
-			return (float(-sys.maxint), float(sys.maxint)), 0.0
+			return (0.0, 1.0), 0.0
 			
 		intervals = sorted(e_dict.iteritems(), key=itemgetter(0))
 		# incrementally calculate classification error
@@ -131,9 +133,9 @@ class DMCBoost(object):
 				mn_idx = i
 				
 		if mn_idx == 0:
-			ret_interval = (float(-sys.maxint), intervals[0][0])
+			ret_interval = (0.0, intervals[0][0])
 		elif mn_idx == length-1:
-			ret_interval = (intervals[mn_idx][0], float(sys.maxint))
+			ret_interval = (intervals[mn_idx][0], 1.0)
 		else:
 			ret_interval = (intervals[mn_idx][0], intervals[mn_idx+1][0])
 			
@@ -219,7 +221,7 @@ class DMCBoost(object):
 			ctree = tree(self.max_depth)
 			self.build_tree(ctree, ht, idx, feature_list, 0, 1, self.get_argmin_loss)
 			bst_interval, bst_error = self.line_search_min_loss(ht, self.X, self.y)
-			alpha_t = (bst_interval[0] + bst_interval[1]) / 2.0
+			alpha_t = (bst_interval[0] + bst_interval[1]) / 2.0 if self.t_>0 else 0.0001
 			self.ht_list.append(ht)
 			self.bst_error_list.append(bst_error)
 			self.alpha_list.append(alpha_t)
@@ -365,10 +367,20 @@ class DMCBoost(object):
 			self.tree_list.append(ctree)
 			self.t_ += 1
 		
-		
+	
+	def print_ht_list(self):
+		for ht in self.ht_list:
+			print ht
+			
+			
+	def print_alpha_list(self):
+		print self.alpha_list
+	
+	
+	
 if __name__ == '__main__':
 	params = {
-		'max_initial_round':		50, 
+		'max_initial_round':		20, 
 		'max_margin_round':		   	10, 
 		'bn_rate':				  	1,
 		'max_depth':				2,
@@ -377,20 +389,26 @@ if __name__ == '__main__':
 	}
 	
 	'make data'
+	n_samples = 50
+	n_features = 10
+	rate_train = 0.75
 	X, y = make_classification(
-		n_samples=100,
-		n_features=10,
+		n_samples=n_samples,
+		n_features=n_features,
 		n_informative=7,
 		n_redundant=1,
 		n_classes=5,
-		shuffle=True
+		shuffle=True,
 	)
 	X = X.astype(np.int)
-	X_train, y_train = X[:16], y[:16]
-	X_test, y_test = X[16:], y[16:]
+	n_train = int(n_samples * rate_train)
+	X_train, y_train = X[:n_train], y[:n_train]
+	X_test, y_test = X[n_train:], y[n_train:]
 	
-	print 'X_train =', X_train
-	print 'y_train =', y_train
+	# sys.stdout = open("f:/Qt_prj/hdoj/data.out", "w")
+	
+	# print 'X_train =', X_train
+	# print 'y_train =', y_train
 	
 	clf = DMCBoost(**params)
 	clf.fit(X_train, y_train)
@@ -398,6 +416,24 @@ if __name__ == '__main__':
 	n_error = zero_one_loss(y_test, y_pred)
 	error_rate = 1 - accuracy_score(y_test, y_pred)
 	
+	print 'DMCBoost:'
+	print 'y_test =', y_test
+	print 'y_pred =', y_pred
+	print 'n_error =', n_error, 'eror_rate =', error_rate
+	
+	clf.print_alpha_list()
+	
+	clf = AdaBoostClassifier(
+		DecisionTreeClassifier(max_depth=params['max_depth']),
+		algorithm="SAMME",
+		n_estimators=50,
+	)
+	clf.fit(X_train, y_train)
+	y_pred = clf.predict(X_test)
+	n_error = zero_one_loss(y_test, y_pred)
+	error_rate = 1 - accuracy_score(y_test, y_pred)
+	
+	print '\nAdaBoost:'
 	print 'y_test =', y_test
 	print 'y_pred =', y_pred
 	print 'n_error =', n_error, 'eror_rate =', error_rate

@@ -55,7 +55,7 @@ def init_Logging():
 
 def predict_adaBoost(X, y, algorithm):
 	max_depth = 3
-	n_estimators = 100
+	n_estimators = 500
 	dt_clf = DecisionTreeClassifier(max_depth=max_depth)
 	algorithm = algorithm
 	n_folds = 5
@@ -97,7 +97,7 @@ def predict_samme_r(X, y):
 	
 def predict_GDMCBoost(X, y):
 	max_depth = 3
-	n_estimators = 100
+	n_estimators = 500
 	n_folds = 5
 	learning_rate=0.1
 
@@ -130,10 +130,10 @@ def predict_GDMCBoost(X, y):
 
 def predict_xgBoost(X, y):
 	max_depth = 3
-	n_estimators = 100
+	n_estimators = 500
 	learning_rate = 0.1
 	silent = True
-	nthread = 2
+	nthread = -1
 	n_folds = 5
 
 	cv = KFold(n=X.shape[0], n_folds=n_folds, shuffle=True)
@@ -170,7 +170,7 @@ def begin_test():
 		"nursery.data",
 		"agaricus.data",
 		"letter.data",
-#		"poker.data",
+		"poker.data",
 	]
 	for fname in ddata:
 		X, y = load_data(os.path.join(d_fpath, fname), np.int32)
@@ -182,7 +182,8 @@ def begin_test():
 		
 		logging.debug("[%s] (%d x %d) begin GDMCBoost ..." % (fname, X.shape[0], X.shape[1]))
 		start_clock = time.clock()
-		predict_GDMCBoost(X, y)
+		if fname != ddata[-1]:
+			predict_GDMCBoost(X, y)
 		end_clock = time.clock()
 		logging.debug("[%s] (%.2fs) end GDMCBoost ..." % (fname, end_clock-start_clock))
 		

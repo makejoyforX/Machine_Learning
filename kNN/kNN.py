@@ -45,6 +45,7 @@ def classifyOneVec(inVector, dataSet, labels, k, distFunc):
 	)
 	return sortedClassCount[0][0]
 
+# normalizing
 def autoNorm(dataSet):
 	minVals = dataSet.min(0)
 	maxVals = dataSet.max(0)

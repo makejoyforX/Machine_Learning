@@ -22,3 +22,5 @@ dist
 build
 *otto_*.csv
 *log.tar.gz
+
+.DS_Store

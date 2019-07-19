@@ -79,7 +79,7 @@ def bagOfWords2VecMN(vocabList, inputSet):
 	return returnVec
 
 def textParse(bigString):
-	listOfTokens = re.split(r'\w*', bigString)
+	listOfTokens = re.split(r'\W+', bigString)  # r'\w*' -> r'\W+'
 	return [tok.lower() for tok in listOfTokens if len(tok) > 0]
 
 def spamTest():
@@ -99,7 +99,7 @@ def spamTest():
 	for i in range(10):
 		randIndex = int(random.uniform(0, len(trainingSet)))
 		testSet.append(trainingSet[randIndex])
-		del(trainingSet[randIndex])
+		#del(trainingSet[randIndex]) #range object does not support del
 	trainMat = []
 	trainClasses = []
 	for docIndex in trainingSet:
